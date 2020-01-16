@@ -51,7 +51,6 @@ namespace Make_Me_Admin
                 expire = expire
             };
 
-
             var json = JsonConvert.SerializeObject(adminRequest);
             var requestContent = new StringContent(json, Encoding.UTF8, "application/json");
             var httpResponse = await client.PostAsync("/add-admin", requestContent);

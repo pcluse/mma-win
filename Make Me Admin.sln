@@ -1,16 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2050
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29503.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Make Me Admin", "Make Me Admin\Make Me Admin.csproj", "{CC5950E4-E9EB-4FD8-94A1-C534154BBED7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug --shortcut|Any CPU = Debug --shortcut|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CC5950E4-E9EB-4FD8-94A1-C534154BBED7}.Debug --shortcut|Any CPU.ActiveCfg = Debug --shortcut|Any CPU
+		{CC5950E4-E9EB-4FD8-94A1-C534154BBED7}.Debug --shortcut|Any CPU.Build.0 = Debug --shortcut|Any CPU
 		{CC5950E4-E9EB-4FD8-94A1-C534154BBED7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CC5950E4-E9EB-4FD8-94A1-C534154BBED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CC5950E4-E9EB-4FD8-94A1-C534154BBED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
