@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Diagnostics;
 
 
 namespace Make_Me_Admin
@@ -22,44 +23,75 @@ namespace Make_Me_Admin
     public partial class MainWindow : Window
     {
         public Client client = new Client();
-        // private string user = Environment.UserName;
         private string user = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
+        EventLog myLog = new EventLog("Application");
+        private string MMALogSource = "MMA";
+        private bool ShortcutMode = false;
 
         public bool bCheckCanBecomeAdmin { get; set; }
         
-        // For testing
-        // private string user = @"DESKTOP-IB70NP4\Johan";
-
         public MainWindow()
         {
-            InitializeComponent();
-            string[] args = Environment.GetCommandLineArgs();
             
-            if (args.Length == 2 && args[1].Equals("--shortcut"))
-            {
-                string StartMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
-                string shortcutLocation = System.IO.Path.Combine(StartMenuPath, "Programs", this.Title + ".lnk");
-                SilentCheckCanBecomeAdmin();
-                
-                if (this.bCheckCanBecomeAdmin)
-                {
-                    CreateShortcut(shortcutLocation, "C:\\Program Files\\PLS\\Make Me Admin Client\\Make Me Admin.exe");
-                }
-                else
-                {
-                    System.IO.File.Delete(shortcutLocation);
-                }
 
-                this.Close();
-                Environment.Exit(0);
-            }
-            else
-            {
-                
-                CheckCanBecomeAdmin();
-            }
+            myLog.Source = MMALogSource;
+
+            string[] args = Environment.GetCommandLineArgs();
+            this.ShortcutMode = (args.Length == 2 && args[1].Equals("--shortcut"));
+            
+            DoStartup();
+            InitializeComponent();
+            Keyboard.Focus(tbTwofactor);
         }
 
+        private async void DoStartup()
+        {
+            if (Precheck())
+            {
+                try
+                {
+                    AdminResult r = await client.CheckAdmin(user);
+                    if (!r.success)
+                    {
+                        ShowMessage(r.message,
+                        "Make Me Admin - Something went wrong", 1, false);
+                        Close();
+                    }
+                } catch (Exception ex)
+                {
+                    Progress.IsIndeterminate = false;
+                    if (ex is TaskCanceledException)
+                    {
+                        ShowMessage("No reply. Are you connected to internet?",
+                            "Make Me Admin - Something went wrong", 1, false);   
+                        Close();
+                    }
+                    else if (ex is System.Net.Http.HttpRequestException)
+                    {
+                        ShowMessage("Make Me Admin failed to contact the service which should run locally on your computer. Please contact your support.",
+                            "Make Me Admin - Something went wrong", 1, false);
+                        Close();
+                    }
+                    else
+                    {
+                        ShowMessage(ex.Message, "", 1, true);
+                        Close();
+                    }
+                }
+
+                if (ShortcutMode)
+                {
+                    string StartMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
+                    string shortcutLocation = System.IO.Path.Combine(StartMenuPath, "Programs", this.Title + ".lnk");
+                    if (System.IO.File.Exists(shortcutLocation))
+                    {
+                        ShowMessage(string.Format("Creating shortcut at {0}", shortcutLocation),"",0,true);
+                        CreateShortcut(shortcutLocation, "C:\\Program Files\\PLS\\Make Me Admin Client\\Make Me Admin.exe");
+                    }
+                    Close();
+                }
+            }
+        }
         private static void CreateShortcut(string shortcutLocation, string targetFileLocation)
         {
             
@@ -72,12 +104,13 @@ namespace Make_Me_Admin
             }
         }
 
-        private void ControlsEnabled(bool enabled)
+        private void ToggleControls()
         {
-            bCancel.IsEnabled = enabled;
-            bOk.IsEnabled = enabled;
-            tbTwofactor.IsEnabled = enabled;
-            cbExpire.IsEnabled = enabled;
+            Progress.IsIndeterminate = true ^ Progress.IsIndeterminate;
+            bCancel.IsEnabled = true ^ bCancel.IsEnabled;
+            bOk.IsEnabled = true ^ bOk.IsEnabled;
+            tbTwofactor.IsEnabled = true ^ tbTwofactor.IsEnabled;
+            cbExpire.IsEnabled = true ^ cbExpire.IsEnabled;
         }
 
         private void bOk_Click(object sender, RoutedEventArgs e)
@@ -88,108 +121,132 @@ namespace Make_Me_Admin
         private void bCancel_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
-            Environment.Exit(0);
+            Close();
         }
 
         private void TBTwoFactor_KeyDown(object sender, KeyEventArgs e)
         {
-            /*
-             * If input is not a number we say it was handled, this way it wont end up in the textbox
-             */
-            if ((e.Key < Key.D0 || e.Key > Key.D9) && (e.Key < Key.NumPad0 || e.Key > Key.NumPad9))
+            // Modifier keys are not represented in e.Key, need to detect these to avoid garbage in the textbox
+            if (Keyboard.IsKeyDown(Key.LeftShift) 
+                || Keyboard.IsKeyDown(Key.RightShift)
+                || Keyboard.IsKeyDown(Key.RightAlt) 
+                || Keyboard.IsKeyDown(Key.RightAlt) 
+                || Keyboard.IsKeyDown(Key.LeftCtrl)
+                || Keyboard.IsKeyDown(Key.RightCtrl)
+               )
             {
                 e.Handled = true;
             }
-            /*
-             * Our code can be six characters long
-             */
-            if (tbTwofactor.Text.Length >= 6)
+            // If escape is pressed, close the window
+            else if (e.Key == Key.Escape)
             {
-                e.Handled = true;
+                Close();
+                Close();
             }
-            // Validate length = 6?
-            if (e.Key == Key.Return && tbTwofactor.Text.Length == 6)
+            // Users should be able to press tab and switch focus to the next UI element
+            else if (e.Key == Key.Tab)
+            {
+                e.Handled = false;
+            }
+            // Let users press enter but only if the textbox has the right amount of characters
+            else if (e.Key == Key.Return && tbTwofactor.Text.Length == 6)
             {
                 AddAdmin();
+                // No need to pass this key
+                e.Handled = true;
+            }
+            // Input has to be between 0 and 9
+            else if ((e.Key < Key.D0 || e.Key > Key.D9) && (e.Key < Key.NumPad0 || e.Key > Key.NumPad9))
+            {
+                e.Handled = true;
+            }
+            // If there is selected text and the input is between 0-9 we skip handling to be able to replace text
+            else if (tbTwofactor.SelectedText.Length > 0 && !(e.Key < Key.D0 || e.Key > Key.D9) && (e.Key < Key.NumPad0 || e.Key > Key.NumPad9))
+            {
+                e.Handled = false;
+            }
+            // No more than six characters in the textbox
+            else if (tbTwofactor.Text.Length >= 6)
+            {
+                e.Handled = true;
             }
         }
 
-        private async void SilentCheckCanBecomeAdmin()
+        private void ShowMessage(string Message, string Title, short Severity,bool HideMessageBox)
         {
-            this.bCheckCanBecomeAdmin = false;
-            // AdminResult r = new AdminResult();
-            try
+            // If this is a message which should not be shown to the user OR if shortcutmode is active,
+            if (HideMessageBox || ShortcutMode)
             {
-                var r = Task.Run(() => client.CheckAdmin(user)).Result;
-                
-                if (r.success)
+                Console.WriteLine(Message);
+            }
+            else
+            {
+                var mbi = MessageBoxImage.Information;
+
+                switch (Severity)
                 {
-                    this.bCheckCanBecomeAdmin = true;
+                    case 1:
+                        mbi = MessageBoxImage.Error;
+                        break;
+                    default:
+                        mbi = MessageBoxImage.Information;
+                        break;
                 }
+                MessageBox.Show(Message,
+                        Title,
+                        MessageBoxButton.OK,
+                        mbi);
             }
-            catch (Exception ex)
+            // Log to eventlog
+            var LogEntryType = EventLogEntryType.Information;
+            switch (Severity)
             {
+                case 1:
+                    LogEntryType = EventLogEntryType.Error;
+                    break;
+                default:
+                    LogEntryType = EventLogEntryType.Information;
+                    break;
             }
+            myLog.WriteEntry(Message, LogEntryType);
         }
-        
-        private async void CheckCanBecomeAdmin()
+
+        private bool Precheck()
         {
-            ControlsEnabled(false);
-            Progress.IsIndeterminate = true;
-            AdminResult r = new AdminResult();
-            try
+            ShowMessage("MMA Client starting precheck.","",0, true);
+
+            if (!System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable())
             {
-                r = await client.CheckAdmin(user);
-                Progress.IsIndeterminate = false;
-                ControlsEnabled(true);
+                ShowMessage("The network is currently unavailable, please try again later.", "Make Me Admin - Network not available", 1, false);
+                Close();
             }
-            catch (Exception ex)
+            Process[] procs = System.Diagnostics.Process.GetProcesses();
+            bool serviceRunning = false;
+            foreach (Process proc in procs)
             {
-                Progress.IsIndeterminate = false;
-                if (ex is TaskCanceledException)
-                {
-                    MessageBox.Show("No reply. Are you connected to internet?",
-                        "Make Me Admin - Something went wrong",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    Environment.Exit(0);
+                if (proc.ProcessName == "MMAService") {
+                    serviceRunning = true;
+                    break;
                 }
-                else if (ex is System.Net.Http.HttpRequestException)
-                {
-                    MessageBox.Show("Make Me Admin failed to contact the service which should run locally on your computer. Please contact your support.",
-                        "Make Me Admin - Something went wrong",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                    Environment.Exit(0);
-                }
-                //throw;
-                //else if (ex is )
             }
-
-            if (! r.success)
+            if (!serviceRunning)
             {
-
-                MessageBox.Show(r.message,
-                    "Make Me Admin - Something went wrong",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-                Environment.Exit(0);
-
+                ShowMessage("Make Me Admin Service is not running, can not proceed.", "Make Me Admin - Error", 1, false);
+                Close();
             }
-            ControlsEnabled(true);
-            Keyboard.Focus(tbTwofactor);
+            ShowMessage("MMA Client adminprecheck was successful.", "", 0, true);
+            return true;
         }
 
         private async void AddAdmin()
         {
+            ToggleControls();
             var twofactor = tbTwofactor.Text.Trim();
             // This should only happen if we click OK because the input only submits if length is 6
             if (twofactor == "")
             {
-                MessageBox.Show("Two factor code is empty",
-                        "Make Me Admin - Error",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
+                ShowMessage("Two factor code is empty",
+                        "Make Me Admin - Error", 1, false);
                 return;
             }
             int expire = 15;
@@ -202,8 +259,6 @@ namespace Make_Me_Admin
                     expire = 60;
                     break;
             }
-            ControlsEnabled(false);
-            Progress.IsIndeterminate = true;
             AdminResult r = null;
             try
             {
@@ -214,31 +269,24 @@ namespace Make_Me_Admin
                 // Do nothing
             }
 
-            Progress.IsIndeterminate = false;
             if (r == null)
             {
-                MessageBox.Show("No reply. Are you connected to internet?",
-                    "Make Me Admin - Something went wrong",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                ShowMessage("No reply. Are you connected to internet?",
+                    "Make Me Admin - Something went wrong",1,false);
                
             }
             else if (r.success)
             {
-                MessageBox.Show(String.Format("You are now a member of the local administrators group\nMembership will be removed in {0} minutes.",expire),
-                        "Make Me Admin - Success",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
-                Environment.Exit(0);
+                ShowMessage(String.Format("You are now a member of the local administrators group\nMembership will be removed in {0} minutes.",expire),
+                        "Make Me Admin - Success",0,false);
+                Close();
             }
             else
             {
-                MessageBox.Show(r.message,
-                    "Make Me Admin - Something went wrong",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                ShowMessage(r.message,
+                    "Make Me Admin - Something went wrong",1,false);
             }
-            ControlsEnabled(true);
+            ToggleControls();
         }
     }
 }

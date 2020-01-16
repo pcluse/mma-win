@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Make_Me_Admin"
         mc:Ignorable="d"
         FocusManager.FocusedElement="{Binding ElementName=tbTwofactor}"
-        Title="Make Me Admin" Height="290" Width="258" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Icon="appIcon.ico">
+        Title="Make Me Admin" Height="290" Width="258" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Icon="appIcon.ico" Visibility="Visible">
     <Grid>
         <Label Content="∙ Once go to https://passport.lu.se/ and&#xD;&#xA;  configure strong authentication&#xD;&#xA;&#xD;&#xA;∙ Open mobile authentication app&#xD;&#xA;∙ Enter Lund University (Security Code 1)" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="90" Width="222"/>
         <TextBox x:Name="tbTwofactor" HorizontalAlignment="Left" Height="42" Margin="10,105,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="222" FontSize="24" TextAlignment="Center" KeyDown="TBTwoFactor_KeyDown"/>
