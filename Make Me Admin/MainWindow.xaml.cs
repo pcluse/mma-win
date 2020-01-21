@@ -81,9 +81,10 @@ namespace Make_Me_Admin
 
                 if (ShortcutMode)
                 {
+                    this.Visibility = Visibility.Hidden;
                     string StartMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
                     string shortcutLocation = System.IO.Path.Combine(StartMenuPath, "Programs", this.Title + ".lnk");
-                    if (System.IO.File.Exists(shortcutLocation))
+                    if (!System.IO.File.Exists(shortcutLocation))
                     {
                         ShowMessage(string.Format("Creating shortcut at {0}", shortcutLocation),"",0,true);
                         CreateShortcut(shortcutLocation, "C:\\Program Files\\PLS\\Make Me Admin Client\\Make Me Admin.exe");
