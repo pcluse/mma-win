@@ -56,6 +56,7 @@ namespace Make_Me_Admin
                         ShowMessage(r.message,
                         "Make Me Admin - Something went wrong", 1, false);
                         Close();
+                        return;
                     }
                 } catch (Exception ex)
                 {
@@ -64,19 +65,18 @@ namespace Make_Me_Admin
                     {
                         ShowMessage("No reply. Are you connected to internet?",
                             "Make Me Admin - Something went wrong", 1, false);   
-                        Close();
                     }
                     else if (ex is System.Net.Http.HttpRequestException)
                     {
                         ShowMessage("Make Me Admin failed to contact the service which should run locally on your computer. Please contact your support.",
                             "Make Me Admin - Something went wrong", 1, false);
-                        Close();
                     }
                     else
                     {
                         ShowMessage(ex.Message, "", 1, true);
-                        Close();
                     }
+                    Close();
+                    return;
                 }
 
                 if (ShortcutMode)
