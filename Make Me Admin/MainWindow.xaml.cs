@@ -56,6 +56,7 @@ namespace Make_Me_Admin
                         ShowMessage(r.message,
                         "Make Me Admin - Something went wrong", 1, false);
                         Close();
+                        return;
                     }
                 } catch (Exception ex)
                 {
@@ -64,26 +65,26 @@ namespace Make_Me_Admin
                     {
                         ShowMessage("No reply. Are you connected to internet?",
                             "Make Me Admin - Something went wrong", 1, false);   
-                        Close();
                     }
                     else if (ex is System.Net.Http.HttpRequestException)
                     {
                         ShowMessage("Make Me Admin failed to contact the service which should run locally on your computer. Please contact your support.",
                             "Make Me Admin - Something went wrong", 1, false);
-                        Close();
                     }
                     else
                     {
                         ShowMessage(ex.Message, "", 1, true);
-                        Close();
                     }
+                    Close();
+                    return;
                 }
 
                 if (ShortcutMode)
                 {
+                    this.Visibility = Visibility.Hidden;
                     string StartMenuPath = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
                     string shortcutLocation = System.IO.Path.Combine(StartMenuPath, "Programs", this.Title + ".lnk");
-                    if (System.IO.File.Exists(shortcutLocation))
+                    if (!System.IO.File.Exists(shortcutLocation))
                     {
                         ShowMessage(string.Format("Creating shortcut at {0}", shortcutLocation),"",0,true);
                         CreateShortcut(shortcutLocation, "C:\\Program Files\\PLS\\Make Me Admin Client\\Make Me Admin.exe");
