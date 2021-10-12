@@ -5,19 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Make_Me_Admin"
         mc:Ignorable="d"
-        FocusManager.FocusedElement="{Binding ElementName=tbTwofactor}"
-        Title="Make Me Admin" Height="290" Width="258" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Icon="appIcon.ico" Visibility="Visible">
+        FocusManager.FocusedElement="{Binding ElementName=CodeField}"
+        Title="Make Me Admin" Height="337" Width="300" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Icon="appIcon.ico">
     <Grid>
-        <Label Content="∙ Once go to https://passport.lu.se/ and&#xD;&#xA;  configure strong authentication&#xD;&#xA;&#xD;&#xA;∙ Open mobile authentication app&#xD;&#xA;∙ Enter Lund University (Security Code 1)" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Height="90" Width="222"/>
-        <TextBox x:Name="tbTwofactor" HorizontalAlignment="Left" Height="42" Margin="10,105,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="222" FontSize="24" TextAlignment="Center" KeyDown="TBTwoFactor_KeyDown"/>
-        <ComboBox x:Name="cbExpire" HorizontalAlignment="Left" Margin="10,164,0,0" VerticalAlignment="Top" Width="222">
-            <ComboBoxItem Content="15 minutes" IsSelected="True"/>
-            <ComboBoxItem Content="30 minutes"/>
-            <ComboBoxItem Content="1 hour"/>
-        </ComboBox>
-        <Button x:Name="bCancel" Content="Cancel" HorizontalAlignment="Left" Margin="10,213,0,0" VerticalAlignment="Top" Width="75" Click="bCancel_Click" IsCancel="True"/>
-        <Button x:Name="bOk" Content="OK" HorizontalAlignment="Left" Margin="156,213,0,0" VerticalAlignment="Top" Width="75" Click="bOk_Click" IsDefault="True"/>
-        <ProgressBar x:Name="Progress" HorizontalAlignment="Left" Height="10" VerticalAlignment="Top" Width="242" Background="White" BorderThickness="0"/>
-
+        <TextBox x:Name="CodeField" HorizontalAlignment="Left" Height="51" Margin="10,200,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="254" FontSize="24" TextAlignment="Center" KeyDown="CodeField_KeyDown" Grid.ColumnSpan="3" Visibility="Hidden"/>
+        <Button x:Name="CancelButton" Content="Cancel" HorizontalAlignment="Left" Margin="9,269,0,0" VerticalAlignment="Top" Width="75" Click="CancelButton_Click" IsCancel="True"/>
+        <Button x:Name="DefaultButton" Content="OK" HorizontalAlignment="Left" Margin="199,269,0,0" VerticalAlignment="Top" Width="75" Click="DefaultButton_Click" IsDefault="True"/>
+        <ProgressBar x:Name="Spinner" HorizontalAlignment="Left" Height="10" VerticalAlignment="Top" Width="274" Background="White" BorderThickness="0"/>
+        <TextBlock x:Name="InfoText" HorizontalAlignment="Left" Margin="10,15,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="97" Width="254" Text="Info"/>
+        <TextBlock x:Name="ErrorText" Foreground="Red" HorizontalAlignment="Left" Margin="10,117,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Grid.ColumnSpan="3" Height="70" Width="254" Text="Error" TextAlignment="Center" />
+        <Button x:Name="TechnicianButton" HorizontalAlignment="Center" Margin="10,270,0,0" VerticalAlignment="Top" Width="17" Click="Technician_Click"  Visibility="Hidden">
+            <Image Height="14" Width="17" Source="Settings_16x.png"/>
+        </Button>
     </Grid>
 </Window>
